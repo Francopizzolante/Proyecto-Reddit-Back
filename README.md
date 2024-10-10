@@ -25,9 +25,9 @@ comentarios.
 - Mostrar la puntuación total para cada publicación y comentario.
 Requisitos Técnicos:
 1. Aplicación Web:
-● Desarrollada en React.js.
-● Implementar una interfaz de usuario intuitiva y responsiva.
-● Utilización de algún sistema de enrutamiento (por ejemplo, React Router).
+- Desarrollada en React.js.
+- Implementar una interfaz de usuario intuitiva y responsiva.
+- Utilización de algún sistema de enrutamiento (por ejemplo, React Router).
 2. Aplicación Móvil:
 ● Desarrollada en React Native.
 Debe mantener la funcionalidad y la experiencia de usuario coherente con la versión
