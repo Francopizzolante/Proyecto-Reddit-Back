@@ -1,0 +1,22 @@
+{
+  "name": "proyecto-reddit-back",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Francopizzolante/Proyecto-Reddit-Back.git"
+  },
+  "author": "Franco",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Francopizzolante/Proyecto-Reddit-Back/issues"
+  },
+  "homepage": "https://github.com/Francopizzolante/Proyecto-Reddit-Back#readme",
+  "dependencies": {
+    "express": "^4.21.1"
+  }
+}
