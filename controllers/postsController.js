@@ -1,6 +1,6 @@
 let posts = [
-  { id: 1, titulo: 'Primer post', descripcion: 'Descripción del primer post', imagen: 'url1.jpg' },
-  { id: 2, titulo: 'Segundo post', descripcion: 'Descripción del segundo post', imagen: 'url2.jpg' },
+  { id: 1, titulo: 'Primer post', descripcion: 'Descripción del primer post', imagen: 'url1.jpg', autor: 'Franco Pizzolante' },
+  { id: 2, titulo: 'Segundo post', descripcion: 'Descripción del segundo post', imagen: 'url2.jpg', autor: 'Franco Pizzolante' },
 ];
 
 let nextId = posts.length + 1;
