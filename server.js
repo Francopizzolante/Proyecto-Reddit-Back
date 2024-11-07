@@ -4,7 +4,6 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 
 const postsRoutes = require('./routes/posts');
-const likesRoutes = require('./routes/likes');
 const commentsRoutes = require('./routes/comments');
 const app = express();
 
@@ -14,7 +13,6 @@ app.use(cors());
 
 // Usar las rutas
 app.use('/api/posts', postsRoutes);
-app.use('/api/likes', likesRoutes);
 app.use('/api/comments', commentsRoutes);
 
 // Configurar el puerto del servidor

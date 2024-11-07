@@ -1,8 +1,5 @@
-let posts = [
-  { id: 1, titulo: 'Primer post', descripcion: 'Descripción del primer post', imagen: 'url1.jpg', autor: 'Franco Pizzolante' },
-  { id: 2, titulo: 'Segundo post', descripcion: 'Descripción del segundo post', imagen: 'url2.jpg', autor: 'Franco Pizzolante' },
-];
-
+// postsController.js
+const posts = require('../Data/postsData');
 let nextId = posts.length + 1;
 
 // Obtener todos los posts
@@ -28,26 +25,38 @@ exports.getPostById = (req, res) => {
   }
 };
 
-// Actualizar un post
-exports.updatePost = (req, res) => {
-  const post = posts.find(p => p.id === parseInt(req.params.id));
-  if (post) {
-    const { titulo, descripcion, imagen } = req.body;
-    post.titulo = titulo;
-    post.descripcion = descripcion;
-    post.imagen = imagen;
-    res.json({ message: 'Post actualizado' });
-  } else {
-    res.status(404).json({ error: 'Post no encontrado' });
-  }
-};
-
 // Eliminar un post
 exports.deletePost = (req, res) => {
   const index = posts.findIndex(p => p.id === parseInt(req.params.id));
   if (index !== -1) {
     posts.splice(index, 1);
     res.json({ message: 'Post eliminado' });
+  } else {
+    res.status(404).json({ error: 'Post no encontrado' });
+  }
+};
+
+// Marcar un post como 'liked'
+exports.addLikeToPost = (req, res) => {
+  const postId = parseInt(req.params.id);
+  const post = posts.find(p => p.id === postId);
+  if (post) {
+    post.isLiked = true; // O incrementar el conteo de likes
+    post.likesCount += 1;
+    res.json({ message: 'Post liked' });
+  } else {
+    res.status(404).json({ error: 'Post no encontrado' });
+  }
+};
+
+// Quitar un 'like' a un post
+exports.removeLikeFromPost = (req, res) => {
+  const postId = parseInt(req.params.id);
+  const post = posts.find(p => p.id === postId);
+  if (post) {
+    post.isLiked = false; // O decrementar el conteo de likes
+    post.likesCount = Math.max(0, post.likesCount - 1);
+    res.json({ message: 'Like removido' });
   } else {
     res.status(404).json({ error: 'Post no encontrado' });
   }
