@@ -61,3 +61,25 @@ exports.removeLikeFromPost = (req, res) => {
     res.status(404).json({ error: 'Post no encontrado' });
   }
 };
+
+// Obtener todos los posts creados por un usuario
+exports.getPostsByUser = (req, res) => {
+  const { user } = req.params; // Obtiene el nombre del usuario desde los parámetros
+  const userPosts = posts.filter(post => post.user.toLowerCase() === user.toLowerCase()); // Filtra por usuario
+  if (userPosts.length > 0) {
+    res.json(userPosts); // Devuelve los posts creados por el usuario
+  } else {
+    res.status(404).json({ error: 'No se encontraron posts creados por este usuario' }); // Error si no hay posts
+  }
+};
+
+// Obtener todos los posts likeados por un usuario
+exports.getLikedPostsByUser = (req, res) => {
+  const { user } = req.params; // Obtiene el nombre del usuario desde los parámetros
+  const likedPosts = posts.filter(post => post.isLiked && post.user.toLowerCase() === user.toLowerCase()); // Filtra por likes y usuario
+  if (likedPosts.length > 0) {
+    res.json(likedPosts); // Devuelve los posts likeados por el usuario
+  } else {
+    res.status(404).json({ error: 'No se encontraron posts likeados por este usuario' }); // Error si no hay posts
+  }
+};
