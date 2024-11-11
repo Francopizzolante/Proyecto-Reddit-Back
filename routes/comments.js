@@ -1,7 +1,9 @@
+// routes/comments.js
 const express = require('express');
 const router = express.Router();
 const commentsController = require('../controllers/commentsController');
 
+// Definir las rutas para las operaciones CRUD
 router.get('/', commentsController.getAllComments);                     // Obtener todos los Comments
 router.post('/', commentsController.addComment);                        // Añade un commentario
 router.delete('/:id', commentsController.deleteComment);                // Elimina un comentario
