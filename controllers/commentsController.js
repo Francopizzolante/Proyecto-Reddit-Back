@@ -1,48 +1,67 @@
-const comments = require('../Data/commentsData');
-let nextCommentId = comments.length + 1;
+const db = require('../config/db');
 
-// Obtiene todos los comentarios almacenados y los devuelve como respuesta
-exports.getAllComments = (req, res) => {
-  res.json(comments);
-};
-
-// Agrega un nuevo comentario basado en la información proporcionada
-exports.addComment = (req, res) => {
-  const { postId, user, content } = req.body;
-  const newComment = { id: comments.length + 1, postId, user, content };
-  comments.push(newComment);
-  res.json(newComment);
-};
-
-// Elimina un comentario identificado por su ID 
-exports.deleteComment = (req, res) => {
-  const commentIndex = comments.findIndex(comment => comment.id === parseInt(req.params.id));
-  if (commentIndex !== -1) {
-    comments.splice(commentIndex, 1);
-    res.json({ message: 'Comentario eliminado' });
-  } else {
-    res.status(404).json({ error: 'Comentario no encontrado' });
-  }
-};
-
-// Obtiene todos los comentarios asociados a un ID de publicación específico
-exports.getCommentsByPostId = (req, res) => {
-    const { postId } = req.params;
-    const postComments = comments.filter(comment => comment.postId === parseInt(postId));
-    if (postComments.length > 0) {
-        res.json(postComments);
-    } else {
-        res.status(404).json({ error: 'No se encontraron comentarios para este post' });
+// Obtener todos los comentarios
+exports.getAllComments = async (req, res) => {
+    try {
+        const [rows] = await db.query('SELECT * FROM comments');
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ error: 'Error al obtener los comentarios', details: err.message });
     }
 };
 
-// Obtiene todos los comentarios realizados por un usuario específico
-exports.getCommentsByUser = (req, res) => {
-    const { user } = req.params;
-    const userComments = comments.filter(comment => comment.user.toLowerCase() === user.toLowerCase());
-    if (userComments.length > 0) {
-        res.json(userComments);
-    } else {
-        res.status(404).json({ error: 'No se encontraron comentarios para este usuario' });
+// Agregar un nuevo comentario
+exports.addComment = async (req, res) => {
+    const { postId, user, content } = req.body;
+    try {
+        const [result] = await db.query(
+            'INSERT INTO comments (postId, user, content) VALUES (?, ?, ?)',
+            [postId, user, content]
+        );
+        res.json({ id: result.insertId, postId, user, content });
+    } catch (err) {
+        res.status(500).json({ error: 'Error al agregar el comentario', details: err.message });
+    }
+};
+
+// Eliminar un comentario
+exports.deleteComment = async (req, res) => {
+    try {
+        const [result] = await db.query('DELETE FROM comments WHERE id = ?', [req.params.id]);
+        if (result.affectedRows > 0) {
+            res.json({ message: 'Comentario eliminado correctamente' });
+        } else {
+            res.status(404).json({ error: 'Comentario no encontrado' });
+        }
+    } catch (err) {
+        res.status(500).json({ error: 'Error al eliminar el comentario', details: err.message });
+    }
+};
+
+// Obtener comentarios por postId
+exports.getCommentsByPostId = async (req, res) => {
+    try {
+        const [rows] = await db.query('SELECT * FROM comments WHERE postId = ?', [req.params.postId]);
+        if (rows.length > 0) {
+            res.json(rows);
+        } else {
+            res.status(404).json({ error: 'No se encontraron comentarios para este post' });
+        }
+    } catch (err) {
+        res.status(500).json({ error: 'Error al obtener los comentarios', details: err.message });
+    }
+};
+
+// Obtener comentarios por usuario
+exports.getCommentsByUser = async (req, res) => {
+    try {
+        const [rows] = await db.query('SELECT * FROM comments WHERE user = ?', [req.params.user]);
+        if (rows.length > 0) {
+            res.json(rows);
+        } else {
+            res.status(404).json({ error: 'No se encontraron comentarios de este usuario' });
+        }
+    } catch (err) {
+        res.status(500).json({ error: 'Error al obtener los comentarios', details: err.message });
     }
 };
