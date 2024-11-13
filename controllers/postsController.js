@@ -13,11 +13,12 @@ exports.getAllPosts = async (req, res) => {
 
 // Crear un nuevo post
 exports.createPost = async (req, res) => {
-    const { titulo, descripcion, imagen } = req.body;
+    const {user, titulo, descripcion, imagen } = req.body;
+    console.log(req.body)
     try {
         const [result] = await db.query(
-            'INSERT INTO posts (titulo, descripcion, imagen) VALUES (?, ?, ?)',
-            [titulo, descripcion, imagen]
+            'INSERT INTO posts (user, titulo, descripcion, imagen) VALUES (?, ?, ?, ?)',
+            [user, titulo, descripcion, imagen]
         );
         res.json({ id: result.insertId, titulo, descripcion, imagen });
     } catch (err) {
@@ -65,8 +66,16 @@ exports.addLikeToPost = async (req, res) => {
             return res.status(404).json({ error: 'Post no encontrado' });
         }
 
-        // Parsear el array de likedBy
-        const likedBy = JSON.parse(rows[0].likedBy);
+        // Validar y parsear likedBy
+        let likedBy;
+        try {
+            likedBy = JSON.parse(rows[0].likedBy); // Intentar parsear como JSON
+            if (!Array.isArray(likedBy)) {
+                throw new Error(); // Si no es un array, lanzar un error
+            }
+        } catch (err) {
+            likedBy = []; // Si no es JSON válido, inicializar como un array vacío
+        }
 
         // Evitar duplicados
         if (!likedBy.includes(user)) {
@@ -86,6 +95,7 @@ exports.addLikeToPost = async (req, res) => {
 };
 
 
+
 // Quitar like a un post
 exports.removeLikeFromPost = async (req, res) => {
     const postId = parseInt(req.params.id); // ID del post
@@ -98,8 +108,16 @@ exports.removeLikeFromPost = async (req, res) => {
             return res.status(404).json({ error: 'Post no encontrado' });
         }
 
-        // Parsear el array de likedBy
-        const likedBy = JSON.parse(rows[0].likedBy);
+        // Validar y parsear likedBy
+        let likedBy;
+        try {
+            likedBy = JSON.parse(rows[0].likedBy); // Intentar parsear como JSON
+            if (!Array.isArray(likedBy)) {
+                throw new Error(); // Si no es un array, lanzar un error
+            }
+        } catch (err) {
+            likedBy = []; // Si no es JSON válido, inicializar como un array vacío
+        }
 
         // Quitar el usuario del array
         const updatedLikedBy = likedBy.filter(username => username !== user);
@@ -115,6 +133,7 @@ exports.removeLikeFromPost = async (req, res) => {
         res.status(500).json({ error: 'Error al eliminar el like', details: err.message });
     }
 };
+
 
 
 
