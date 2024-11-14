@@ -12,6 +12,6 @@ router.post('/:id/like', postsController.addLikeToPost);                // Da li
 router.delete('/:id/like', postsController.removeLikeFromPost);         // Quita el like de un post 
 router.get('/user/:user', postsController.getPostsByUser);              // obtener posts creados por un usuario
 router.get('/user/:user/liked', postsController.getPostsLikedByUser);   // obtener posts likeados por un usuario
-
+router.get('/title/:id', postsController.getPostTitleById);             // Obtener el título de un post por su ID
 
 module.exports = router;

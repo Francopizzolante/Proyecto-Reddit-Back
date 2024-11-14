@@ -40,6 +40,21 @@ exports.getPostById = async (req, res) => {
     }
 };
 
+// Obtener el título de un post por su ID
+exports.getPostTitleById = async (req, res) => {
+    const { id } = req.params; // ID del post pasado como parámetro
+    try {
+        const [rows] = await db.query('SELECT titulo FROM posts WHERE id = ?', [id]); // Consulta a la base de datos
+        if (rows.length > 0) {
+            res.json({ titulo: rows[0].titulo }); // Devuelve solo el título
+        } else {
+            res.status(404).json({ error: 'Post no encontrado' });
+        }
+    } catch (err) {
+        res.status(500).json({ error: 'Error al obtener el título del post', details: err.message });
+    }
+};
+
 // Eliminar un post
 exports.deletePost = async (req, res) => {
     try {
