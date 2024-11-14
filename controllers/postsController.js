@@ -12,17 +12,17 @@ exports.getAllPosts = async (req, res) => {
 };
 
 // Crear un nuevo post
-exports.createPost = async (req, res) => {
-    const {user, titulo, descripcion, imagen } = req.body;
-    console.log(req.body)
+exports.createPost = async ({ titulo, descripcion, user, imagen }) => {
     try {
+        console.log('Guardando post en la base de datos:', { titulo, descripcion, user, imagen }); // Log para verificar los datos
         const [result] = await db.query(
-            'INSERT INTO posts (user, titulo, descripcion, imagen) VALUES (?, ?, ?, ?)',
-            [user, titulo, descripcion, imagen]
+            'INSERT INTO posts (titulo, descripcion, user, imagen) VALUES (?, ?, ?, ?)',
+            [titulo, descripcion, user, imagen]
         );
-        res.json({ id: result.insertId, titulo, descripcion, imagen });
+        return { id: result.insertId, titulo, descripcion, user, imagen };
     } catch (err) {
-        res.status(500).json({ error: 'Error al crear el post', details: err.message });
+        console.error('Error al crear el post en la base de datos:', err); // Imprime errores de la base de datos
+        throw err;
     }
 };
 
@@ -148,10 +148,6 @@ exports.removeLikeFromPost = async (req, res) => {
         res.status(500).json({ error: 'Error al eliminar el like', details: err.message });
     }
 };
-
-
-
-
 
 // Obtener todos los posts creados por un usuario
 exports.getPostsByUser = async (req, res) => {

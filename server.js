@@ -2,6 +2,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const path = require('path');
 
 const postsRoutes = require('./routes/posts');
 const commentsRoutes = require('./routes/comments');
@@ -10,6 +11,9 @@ const app = express();
 // Middleware
 app.use(bodyParser.json());
 app.use(cors());
+
+// Servir archivos estáticos de la carpeta "uploads"
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Usar las rutas
 app.use('/api/posts', postsRoutes);
