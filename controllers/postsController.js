@@ -20,7 +20,7 @@ exports.createPost = async ({ titulo, descripcion, user, imagen }) => {
         );
         return { id: result.insertId, titulo, descripcion, user, imagen };
     } catch (err) {
-        console.error('Error al crear el post en la base de datos:', err); // Imprime errores de la base de datos
+        console.error('Error al crear el post:', err); // Imprime errores de la base de datos
         throw err;
     }
 };
