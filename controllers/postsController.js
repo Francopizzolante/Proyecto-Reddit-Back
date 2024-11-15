@@ -14,7 +14,6 @@ exports.getAllPosts = async (req, res) => {
 // Crear un nuevo post
 exports.createPost = async ({ titulo, descripcion, user, imagen }) => {
     try {
-        console.log('Guardando post en la base de datos:', { titulo, descripcion, user, imagen }); // Log para verificar los datos
         const [result] = await db.query(
             'INSERT INTO posts (titulo, descripcion, user, imagen) VALUES (?, ?, ?, ?)',
             [titulo, descripcion, user, imagen]
@@ -72,24 +71,26 @@ exports.deletePost = async (req, res) => {
 // Dar like a un post
 exports.addLikeToPost = async (req, res) => {
     const postId = parseInt(req.params.id); // ID del post
-    const { user } = req.body; // Usuario que da like
+    const user = req.body; // Usuario que da like (recibido como string)
 
     try {
+        // Validar que el usuario no esté vacío
+        if (!user) {
+            return res.status(400).json({ error: 'El usuario es obligatorio.' });
+        }
+
         // Obtén el campo likedBy del post
         const [rows] = await db.query('SELECT likedBy FROM posts WHERE id = ?', [postId]);
         if (rows.length === 0) {
             return res.status(404).json({ error: 'Post no encontrado' });
         }
 
-        // Validar y parsear likedBy
         let likedBy;
         try {
-            likedBy = JSON.parse(rows[0].likedBy); // Intentar parsear como JSON
-            if (!Array.isArray(likedBy)) {
-                throw new Error(); // Si no es un array, lanzar un error
-            }
+            likedBy = JSON.parse(rows[0].likedBy) || [];
+            if (!Array.isArray(likedBy)) throw new Error();
         } catch (err) {
-            likedBy = []; // Si no es JSON válido, inicializar como un array vacío
+            likedBy = [];
         }
 
         // Evitar duplicados
@@ -97,18 +98,21 @@ exports.addLikeToPost = async (req, res) => {
             likedBy.push(user); // Agregar el usuario
         }
 
-        // Actualizar la base de datos con el nuevo array JSON
+        // Actualizar la base de datos
         await db.query(
-            'UPDATE posts SET likedBy = ?, likesCount = likesCount + 1 WHERE id = ?',
-            [JSON.stringify(likedBy), postId]
+            'UPDATE posts SET likedBy = ?, likesCount = ? WHERE id = ?',
+            [JSON.stringify(likedBy), likedBy.length, postId]
         );
 
-        res.json({ message: 'Like agregado', likedBy }); // Respuesta exitosa
+        res.json({
+            message: 'Like agregado',
+            likedBy,
+            likesCount: likedBy.length,
+        });
     } catch (err) {
         res.status(500).json({ error: 'Error al agregar el like', details: err.message });
     }
 };
-
 
 
 // Quitar like a un post
@@ -123,27 +127,28 @@ exports.removeLikeFromPost = async (req, res) => {
             return res.status(404).json({ error: 'Post no encontrado' });
         }
 
-        // Validar y parsear likedBy
         let likedBy;
         try {
-            likedBy = JSON.parse(rows[0].likedBy); // Intentar parsear como JSON
-            if (!Array.isArray(likedBy)) {
-                throw new Error(); // Si no es un array, lanzar un error
-            }
+            likedBy = JSON.parse(rows[0].likedBy) || [];
+            if (!Array.isArray(likedBy)) throw new Error();
         } catch (err) {
-            likedBy = []; // Si no es JSON válido, inicializar como un array vacío
+            likedBy = [];
         }
 
         // Quitar el usuario del array
         const updatedLikedBy = likedBy.filter(username => username !== user);
 
-        // Actualizar la base de datos con el nuevo array JSON
+        // Actualizar la base de datos
         await db.query(
-            'UPDATE posts SET likedBy = ?, likesCount = GREATEST(0, likesCount - 1) WHERE id = ?',
-            [JSON.stringify(updatedLikedBy), postId]
+            'UPDATE posts SET likedBy = ?, likesCount = ? WHERE id = ?',
+            [JSON.stringify(updatedLikedBy), updatedLikedBy.length, postId]
         );
 
-        res.json({ message: 'Like eliminado', likedBy: updatedLikedBy }); // Respuesta exitosa
+        res.json({
+            message: 'Like eliminado',
+            likedBy: updatedLikedBy,
+            likesCount: updatedLikedBy.length,
+        });
     } catch (err) {
         res.status(500).json({ error: 'Error al eliminar el like', details: err.message });
     }

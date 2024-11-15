@@ -9,9 +9,6 @@ router.get('/', postsController.getAllPosts);                           // Obten
 // Ruta para crear un nuevo post
 router.post('/create', upload.single('imagen'), async (req, res) => {
     try {
-        console.log('Datos del formulario:', req.body); // Muestra los datos enviados en el formulario
-        console.log('Archivo subido:', req.file); // Muestra información del archivo subido
-
         const { titulo, descripcion, user } = req.body;
         const imagen = req.file ? `/uploads/${req.file.filename}` : null;
 

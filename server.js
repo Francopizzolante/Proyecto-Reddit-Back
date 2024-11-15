@@ -10,6 +10,7 @@ const app = express();
 
 // Middleware
 app.use(bodyParser.json());
+app.use(bodyParser.text());
 app.use(cors());
 
 // Servir archivos estáticos de la carpeta "uploads"
