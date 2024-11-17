@@ -13,6 +13,11 @@ exports.getAllComments = async (req, res) => {
 // Agregar un nuevo comentario
 exports.addComment = async (req, res) => {
     const { postId, user, content } = req.body;
+
+    if (!postId || !user || !content) {
+        return res.status(400).json({ error: 'Todos los campos son obligatorios' });
+    }
+
     try {
         const [result] = await db.query(
             'INSERT INTO comments (postId, user, content) VALUES (?, ?, ?)',
@@ -20,9 +25,11 @@ exports.addComment = async (req, res) => {
         );
         res.json({ id: result.insertId, postId, user, content });
     } catch (err) {
+        console.error('Error al agregar el comentario:', err.message);
         res.status(500).json({ error: 'Error al agregar el comentario', details: err.message });
     }
 };
+
 
 // Eliminar un comentario
 exports.deleteComment = async (req, res) => {
