@@ -71,12 +71,12 @@ exports.deletePost = async (req, res) => {
 // Dar like a un post
 exports.addLikeToPost = async (req, res) => {
     const postId = parseInt(req.params.id); // ID del post
-    const user = req.body; // Usuario que da like (recibido como string)
+    const user = req.body.user; // Usuario que da like (recibido como string)
 
     try {
         // Validar que el usuario no esté vacío
-        if (!user) {
-            return res.status(400).json({ error: 'El usuario es obligatorio.' });
+        if (!user || typeof user !== 'string' || user.trim() === '') {
+            return res.status(400).json({ error: 'El usuario es obligatorio y debe ser un string válido.' });
         }
 
         // Obtén el campo likedBy del post
@@ -85,34 +85,36 @@ exports.addLikeToPost = async (req, res) => {
             return res.status(404).json({ error: 'Post no encontrado' });
         }
 
-        let likedBy;
-        try {
-            likedBy = JSON.parse(rows[0].likedBy) || [];
-            if (!Array.isArray(likedBy)) throw new Error();
-        } catch (err) {
-            likedBy = [];
-        }
+        // Obtener el campo likedBy como string
+        let likedBy = rows[0].likedBy || '';
+
+        // Convertir el string a un array de nombres separados por comas
+        let likedByArray = likedBy.split(',').map(name => name.trim()).filter(Boolean);
 
         // Evitar duplicados
-        if (!likedBy.includes(user)) {
-            likedBy.push(user); // Agregar el usuario
+        if (!likedByArray.includes(user)) {
+            likedByArray.push(user); // Agregar el usuario
         }
+
+        // Convertir de nuevo a un string separado por comas
+        likedBy = likedByArray.join(', ');
 
         // Actualizar la base de datos
         await db.query(
             'UPDATE posts SET likedBy = ?, likesCount = ? WHERE id = ?',
-            [JSON.stringify(likedBy), likedBy.length, postId]
+            [likedBy, likedByArray.length, postId]
         );
 
         res.json({
             message: 'Like agregado',
             likedBy,
-            likesCount: likedBy.length,
+            likesCount: likedByArray.length,
         });
     } catch (err) {
         res.status(500).json({ error: 'Error al agregar el like', details: err.message });
     }
 };
+
 
 
 // Quitar like a un post
@@ -121,38 +123,45 @@ exports.removeLikeFromPost = async (req, res) => {
     const { user } = req.body; // Usuario que quita el like
 
     try {
+        // Validar que el usuario no esté vacío
+        if (!user || typeof user !== 'string' || user.trim() === '') {
+            return res.status(400).json({ error: 'El usuario es obligatorio y debe ser un string válido.' });
+        }
+
         // Obtén el campo likedBy del post
         const [rows] = await db.query('SELECT likedBy FROM posts WHERE id = ?', [postId]);
         if (rows.length === 0) {
             return res.status(404).json({ error: 'Post no encontrado' });
         }
 
-        let likedBy;
-        try {
-            likedBy = JSON.parse(rows[0].likedBy) || [];
-            if (!Array.isArray(likedBy)) throw new Error();
-        } catch (err) {
-            likedBy = [];
-        }
+        // Obtener el campo likedBy como string
+        let likedBy = rows[0].likedBy || '';
+
+        // Convertir el string a un array de nombres separados por comas
+        let likedByArray = likedBy.split(',').map(name => name.trim()).filter(Boolean);
 
         // Quitar el usuario del array
-        const updatedLikedBy = likedBy.filter(username => username !== user);
+        const updatedLikedByArray = likedByArray.filter(username => username !== user);
+
+        // Convertir de nuevo a un string separado por comas
+        const updatedLikedBy = updatedLikedByArray.join(', ');
 
         // Actualizar la base de datos
         await db.query(
             'UPDATE posts SET likedBy = ?, likesCount = ? WHERE id = ?',
-            [JSON.stringify(updatedLikedBy), updatedLikedBy.length, postId]
+            [updatedLikedBy || null, updatedLikedByArray.length, postId]
         );
 
         res.json({
             message: 'Like eliminado',
             likedBy: updatedLikedBy,
-            likesCount: updatedLikedBy.length,
+            likesCount: updatedLikedByArray.length,
         });
     } catch (err) {
         res.status(500).json({ error: 'Error al eliminar el like', details: err.message });
     }
 };
+
 
 // Obtener todos los posts creados por un usuario
 exports.getPostsByUser = async (req, res) => {
@@ -175,17 +184,20 @@ exports.getPostsByUser = async (req, res) => {
 
 // Obtener todos los posts "likeados" por un usuario
 exports.getPostsLikedByUser = async (req, res) => {
-  const { user } = req.params; // Nombre del usuario pasado como parámetro
-  try {
-      // Consulta los posts donde el usuario esté en el array likedBy
-      const [rows] = await db.query('SELECT * FROM posts WHERE JSON_CONTAINS(likedBy, JSON_QUOTE(?))', [user]);
+    const { user } = req.params; // Nombre del usuario pasado como parámetro
+    try {
+        // Consulta los posts donde el usuario esté incluido en el string likedBy
+        const [rows] = await db.query(
+            'SELECT * FROM posts WHERE FIND_IN_SET(?, REPLACE(likedBy, ", ", ",")) > 0',
+            [user]
+        );
 
-      if (rows.length > 0) {
-          res.json(rows); // Devuelve los posts likeados
-      } else {
-          res.status(404).json({ error: `No se encontraron posts likeados por el usuario ${user}` });
-      }
-  } catch (err) {
-      res.status(500).json({ error: 'Error al obtener los posts likeados', details: err.message });
-  }
+        if (rows.length > 0) {
+            res.json(rows); // Devuelve los posts likeados
+        } else {
+            res.status(404).json({ error: `No se encontraron posts likeados por el usuario ${user}` });
+        }
+    } catch (err) {
+        res.status(500).json({ error: 'Error al obtener los posts likeados', details: err.message });
+    }
 };
