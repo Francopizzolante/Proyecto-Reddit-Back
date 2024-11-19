@@ -18,14 +18,12 @@ const fileFilter = (req, file, cb) => {
     const allowedFileTypes = ['image/jpeg', 'image/png', 'image/jpg'];
     if (allowedFileTypes.includes(file.mimetype)) {
         cb(null, true);
-    } else {
+    } 
+    else {
         cb(new Error('Solo se permiten archivos .jpeg, .jpg o .png'), false);
     }
 };
 
-const upload = multer({ 
-    storage: storage,
-    fileFilter: fileFilter
-});
+const upload = multer({ storage: storage, fileFilter: fileFilter });
 
 module.exports = upload;

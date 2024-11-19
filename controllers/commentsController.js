@@ -1,3 +1,4 @@
+// controllers/commentsController.js
 const db = require('../config/db');
 
 // Obtener todos los comentarios
@@ -10,7 +11,7 @@ exports.getAllComments = async (req, res) => {
     }
 };
 
-// Agregar un nuevo comentario
+// crear un comentario
 exports.addComment = async (req, res) => {
     const { postId, user, content } = req.body;
 
@@ -63,11 +64,7 @@ exports.getCommentsByPostId = async (req, res) => {
 exports.getCommentsByUser = async (req, res) => {
     try {
         const [rows] = await db.query('SELECT * FROM comments WHERE user = ?', [req.params.user]);
-        if (rows.length > 0) {
-            res.json(rows);
-        } else {
-            res.status(404).json({ error: 'No se encontraron comentarios de este usuario' });
-        }
+        res.json(rows);
     } catch (err) {
         res.status(500).json({ error: 'Error al obtener los comentarios', details: err.message });
     }

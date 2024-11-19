@@ -1,4 +1,4 @@
-// postsController.js
+// controllers/postsController.js
 const db = require('../config/db');
 
 // Obtener todos los posts
@@ -6,50 +6,40 @@ exports.getAllPosts = async (req, res) => {
     try {
         const [rows] = await db.query('SELECT * FROM posts');
         res.json(rows);
-    } catch (err) {
+    } 
+    catch (err) {
         res.status(500).json({ error: 'Error al obtener los posts', details: err.message });
     }
 };
 
 // Crear un nuevo post
-exports.createPost = async ({ titulo, descripcion, user, imagen }) => {
+exports.createPost = async (req, res) => {
     try {
+        const { titulo, descripcion, user } = req.body;
+        const imagen = req.file ? `/uploads/${req.file.filename}` : null;
+
+        // Ejecutar la consulta de inserción en la base de datos
         const [result] = await db.query(
             'INSERT INTO posts (titulo, descripcion, user, imagen) VALUES (?, ?, ?, ?)',
             [titulo, descripcion, user, imagen]
         );
-        return { id: result.insertId, titulo, descripcion, user, imagen };
-    } catch (err) {
-        console.error('Error al crear el post:', err); // Imprime errores de la base de datos
-        throw err;
-    }
-};
 
-// Obtener un post por su ID
-exports.getPostById = async (req, res) => {
-    try {
-        const [rows] = await db.query('SELECT * FROM posts WHERE id = ?', [req.params.id]);
-        if (rows.length > 0) {
-            res.json(rows[0]);
-        } else {
-            res.status(404).json({ error: 'Post no encontrado' });
-        }
-    } catch (err) {
-        res.status(500).json({ error: 'Error al obtener el post', details: err.message });
+        res.status(201).json({ id: result.insertId, titulo, descripcion, user, imagen });               // Devolver el resultado del nuevo post creado
+
+    } 
+    catch (err) {
+        console.error('Error al crear el post:', err);
+        res.status(500).json({ error: 'Error al crear el post', details: err.message });                // Enviar respuesta con un error si algo falla
     }
 };
 
 // Obtener el título de un post por su ID
 exports.getPostTitleById = async (req, res) => {
-    const { id } = req.params; // ID del post pasado como parámetro
     try {
-        const [rows] = await db.query('SELECT titulo FROM posts WHERE id = ?', [id]); // Consulta a la base de datos
-        if (rows.length > 0) {
-            res.json({ titulo: rows[0].titulo }); // Devuelve solo el título
-        } else {
-            res.status(404).json({ error: 'Post no encontrado' });
-        }
-    } catch (err) {
+        const [rows] = await db.query('SELECT titulo FROM posts WHERE id = ?', [req.params.id]);        // Consulta a la base de datos
+        res.json(rows[0] || { error: 'Post no encontrado' });                                           // Devuelve el título o un error si no se encuentra
+    } 
+    catch (err) {
         res.status(500).json({ error: 'Error al obtener el título del post', details: err.message });
     }
 };
@@ -63,15 +53,16 @@ exports.deletePost = async (req, res) => {
         } else {
             res.status(404).json({ error: 'Post no encontrado' });
         }
-    } catch (err) {
+    } 
+    catch (err) {
         res.status(500).json({ error: 'Error al eliminar el post', details: err.message });
     }
 };
 
 // Dar like a un post
 exports.addLikeToPost = async (req, res) => {
-    const postId = parseInt(req.params.id); // ID del post
-    const user = req.body.user; // Usuario que da like (recibido como string)
+    const postId = parseInt(req.params.id);     // ID del post
+    const user = req.body.user;                 // Usuario que da like (recibido como string)
 
     try {
         // Validar que el usuario no esté vacío
@@ -100,17 +91,11 @@ exports.addLikeToPost = async (req, res) => {
         likedBy = likedByArray.join(', ');
 
         // Actualizar la base de datos
-        await db.query(
-            'UPDATE posts SET likedBy = ?, likesCount = ? WHERE id = ?',
-            [likedBy, likedByArray.length, postId]
-        );
+        await db.query( 'UPDATE posts SET likedBy = ?, likesCount = ? WHERE id = ?', [likedBy, likedByArray.length, postId]);
 
-        res.json({
-            message: 'Like agregado',
-            likedBy,
-            likesCount: likedByArray.length,
-        });
-    } catch (err) {
+        res.json({ message: 'Like agregado', likedBy, likesCount: likedByArray.length });
+    } 
+    catch (err) {
         res.status(500).json({ error: 'Error al agregar el like', details: err.message });
     }
 };
@@ -152,52 +137,32 @@ exports.removeLikeFromPost = async (req, res) => {
             [updatedLikedBy || null, updatedLikedByArray.length, postId]
         );
 
-        res.json({
-            message: 'Like eliminado',
-            likedBy: updatedLikedBy,
-            likesCount: updatedLikedByArray.length,
-        });
-    } catch (err) {
+        res.json({ message: 'Like eliminado', likedBy: updatedLikedBy, likesCount: updatedLikedByArray.length });
+    } 
+    catch (err) {
         res.status(500).json({ error: 'Error al eliminar el like', details: err.message });
     }
 };
 
-
 // Obtener todos los posts creados por un usuario
 exports.getPostsByUser = async (req, res) => {
-  const { user } = req.params; // Obtiene el nombre del usuario desde los parámetros
   try {
-      const [rows] = await db.query(
-          'SELECT * FROM posts WHERE user = ?',
-          [user]
-      ); // Consulta a la base de datos filtrando por usuario
-      if (rows.length > 0) {
-          res.json(rows); // Devuelve los posts creados por el usuario
-      } else {
-          res.status(404).json({ error: 'No se encontraron posts creados por este usuario' });
-      }
-  } catch (err) {
-      res.status(500).json({ error: 'Error al obtener los posts', details: err.message });
-  }
+        const [rows] = await db.query( 'SELECT * FROM posts WHERE user = ?', [req.params.user]);     // Consulta a la base de datos filtrando por usuario
+        res.json(rows);                                                                             // Devuelve los posts creados por el usuario
+    }
+    catch (err) {
+        res.status(500).json({ error: 'Error al obtener los posts', details: err.message });
+    }
 };
-
 
 // Obtener todos los posts "likeados" por un usuario
 exports.getPostsLikedByUser = async (req, res) => {
-    const { user } = req.params; // Nombre del usuario pasado como parámetro
     try {
         // Consulta los posts donde el usuario esté incluido en el string likedBy
-        const [rows] = await db.query(
-            'SELECT * FROM posts WHERE FIND_IN_SET(?, REPLACE(likedBy, ", ", ",")) > 0',
-            [user]
-        );
-
-        if (rows.length > 0) {
-            res.json(rows); // Devuelve los posts likeados
-        } else {
-            res.status(404).json({ error: `No se encontraron posts likeados por el usuario ${user}` });
-        }
-    } catch (err) {
+        const [rows] = await db.query( 'SELECT * FROM posts WHERE FIND_IN_SET(?, REPLACE(likedBy, ", ", ",")) > 0', [req.params.user]);
+        res.json(rows);
+    } 
+    catch (err) {
         res.status(500).json({ error: 'Error al obtener los posts likeados', details: err.message });
     }
 };
